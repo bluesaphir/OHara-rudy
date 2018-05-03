@@ -1,0 +1,18 @@
+IKur: added ss tss_xura, uri
+deleted void tss_mL
+added delta epi to void tss_iF, void tss_iS
+deleted INa_late
+Ito added delta epi
+Ito = 1.44 * Gto (! wrong)
+added IKur
+IK1 = 0.15* GK1 (! wrong)
+
+added 1.5 in KmCaAct=1.5*150.0e-6;
+
+INaCa=0.7*(INaCa_i+INaCa_ss);(wrong!)
+INaK = 0.7 * Pnak * (zna * JnakNa + zk * JnakK);(wrong!)
+
+double KmCaAct=1.5 * 150.0e-6;
+
+added a_rel *=c_arel;¶
+a_rel *=c_avarel;¶
