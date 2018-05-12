@@ -10,9 +10,9 @@
 
 #define READIS 1 // 9.03.2017
 
-#define WRITEIS 1 // 9.03.2017 //!!!!
+#define WRITEIS 0 // 9.03.2017 //!!!!
 
-#define CHAIN 0 // 28.06.2017 
+#define CHAIN 0 // 28.06.2017 // not working in this version! 
 #define ADAPTIVE_STEP 1 // 06.07.2017
 #define IKR_GRANDI 0 //17.07.2017 IKr formulation by Grandi
 
@@ -36,8 +36,8 @@ void stateInitialization(struct State *CurrentState);// 9.03.2017*/
 
 
 const double CL = 1000; //pacing cycle length
-const double np = 30.;
-const double ft =   np * CL; // + duration1 + duration; both for step and basis; final time  
+const double np = 40.;
+double ft =   np * CL; // + duration1 + duration; both for step and basis; final time  
 const int skip = 1./(dt);//number of timesetps to skip in sampling of data in output file
 const double safetime = 15.0;//time from the beginning of each beat during which dt is fixed to small values
 const double beatssave = 100;//number of beats to save in the output
@@ -412,11 +412,12 @@ void RGC(struct State *CurrentState,  struct State *NextState, int z,  int chain
             }
             else
             {
-                delta_epi=1.0-(0.95/(1.0+exp((ee + 70.0)/5.0)));
+                delta_epi=1.0-(0.95/(1.0+exp((CurrentState[z].v + 70.0)/5.0)));
+                //delta_epi=1.0-(0.95/(1.0+exp((ee + 70.0)/5.0))); // change
             }
             double tiF=4.562+1/(0.3933*exp((-(CurrentState[z].v +100.0))/100.0)+0.08004*exp((CurrentState[z].v + 50.0)/16.59));
             double tiS=23.62+1/(0.001416*exp((-(CurrentState[z].v + 96.52))/59.05)+1.780e-8*exp((CurrentState[z].v + 114.1)/8.079));
-            tiF *= delta_epi;
+            tiF *= delta_epi; 
             tiS *= delta_epi;
         
             double assp=1.0/(1.0+exp((-(CurrentState[z].v -24.34))/14.82));
@@ -438,7 +439,7 @@ void RGC(struct State *CurrentState,  struct State *NextState, int z,  int chain
         NextState[z].iFp = iss - (iss - CurrentState[z].iFp) * exp(-dt/tiFp);
         NextState[z].iSp = iss - (iss - CurrentState[z].iSp) * exp(-dt/tiSp);
         
-        double Gto=0.02*c_gto;
+        double Gto=4*0.02*c_gto; //change *4
         if (celltype==1)
         {
             Gto*=4.0;
@@ -488,7 +489,9 @@ void RGC(struct State *CurrentState,  struct State *NextState, int z,  int chain
             { 
                 
             }
-            else dss=1.0/(1.0+exp((-(CurrentState[z].v+10))/7.4)); // v0.5 = 3.94, k = 4.320 (*)
+            else dss=1.0/(1.0+exp((-(CurrentState[z].v+9.0))/5.8));
+            //dss=1.0/(1.0+exp((-(CurrentState[z].v+10))/7.4)); // v0.5 = 3.94, k = 4.320 (*)
+            //else dss=1.0/(1.0+exp((-(CurrentState[z].v+3.940))/4.230));
             
             double td=0.6+1.0/(exp(-0.05*(CurrentState[z].v +6.0))+exp(0.09*(CurrentState[z].v+14.0)));
             if (iso==1)
@@ -496,7 +499,8 @@ void RGC(struct State *CurrentState,  struct State *NextState, int z,  int chain
                 //fss=1.0/(1.0+exp((CurrentState[z].v + 19.58+2.8)/3.696)); (ori19.58)
                 fss=1.0/(1.0+exp((CurrentState[z].v + 19.58+8.0*c_ICaL_dV_inact)/3.696));
             }
-            else fss=1.0/(1.0+exp((CurrentState[z].v +27.4)/7.1)); //v0.5=19.58, k= 3.696 (*)
+            else fss=1.0/(1.0+exp((CurrentState[z].v +31.7)/4.6)); //v0.5=19.58, k= 3.696 (*)
+            //else fss=1.0/(1.0+exp((CurrentState[z].v +19.58)/3.696));//or
 
             double tff=7.0+1.0/(0.0045*exp(-(CurrentState[z].v + 20.0)/10.0)+0.0045*exp((CurrentState[z].v + 20.0)/10.0));
             double tfs=1000.0+1.0/(0.000035*exp(-(CurrentState[z].v+5.0)/4.0)+0.000035*exp((CurrentState[z].v+ 5.0)/6.0));
@@ -764,7 +768,16 @@ void RGC(struct State *CurrentState,  struct State *NextState, int z,  int chain
 			double txura=0.5+9.0/(1.0+exp((CurrentState[z].v + 5.0)/12.0));
 			double xuriss=1.0/(1.0+exp(((CurrentState[z].v + 7.5))/10.0));
 			double txuri=3050+590/(1.0+exp((CurrentState[z].v + 60.0)/10.0));        
-        
+			/* curtmansh
+			double alphauakur= 0.65/(exp(-(CurrentState[z].v+10.)/8.5)+exp(-(CurrentState[z].v-30.)/59.0));
+			double betauakur = 0.65/(2.5+exp((CurrentState[z].v+82)/17.0));
+			double txura = 1/(3*(alphauakur+betauakur));
+			double xurass=1.0/(1.0+exp((-(CurrentState[z].v + 30.3))/9.6));
+			double alphauikur = 1/(21.+exp(-(CurrentState[z].v-185.)/28.));
+			double betauikur = exp((CurrentState[z].v-158.)/16.);
+			double txuri = 1/(3.*(alphauikur+betauikur));
+			double xuriss=1.0/(1.0+exp(((CurrentState[z].v - 99.45))/27.48));
+        */
         #endif
         
         NextState[z].xura = xurass - (xurass - CurrentState[z].xura) * exp(-dt/txura);
@@ -772,7 +785,11 @@ void RGC(struct State *CurrentState,  struct State *NextState, int z,  int chain
 
         double GKur=0.045;
         
-        IKur = 16* GKur * CurrentState[z].xura * CurrentState[z].xuri * (CurrentState[z].v-EK);
+        IKur =  GKur * CurrentState[z].xura * CurrentState[z].xuri * (CurrentState[z].v-EK);
+        // courtmansh
+        //IKur = 2.5* (0.005+0.05/(1+exp(-(CurrentState[z].v-15.)/13.))) * pow(CurrentState[z].xura,3) * CurrentState[z].xuri * (CurrentState[z].v-EK);
+         
+      
         
         Ikur_stop = clock();
         fprintf(foutput,"IKur: %e\n",(double)(Ikur_stop - Ikur_start) / (CLOCKS_PER_SEC));        
@@ -816,7 +833,8 @@ void RGC(struct State *CurrentState,  struct State *NextState, int z,  int chain
         {
             GK1*=1.3;
         }
-        IK1 = c_m_gk1 * GK1 * sqrt(ko) * rk1 * CurrentState[z].xk1 * (CurrentState[z].v - EK);
+        //IK1 = c_m_gk1 * GK1 * sqrt(ko) * rk1 * CurrentState[z].xk1 * (CurrentState[z].v - EK);
+        IK1=0.68*0.09*1/(1+exp(0.07*(CurrentState[z].v+80.)))*(CurrentState[z].v - EK); // kurtmansh
         
         Ik1_stop = clock();
         fprintf(foutput,"Ik1: %e\n",(double)(Ik1_stop - Ik1_start) / (CLOCKS_PER_SEC));
@@ -1113,22 +1131,22 @@ void RGC(struct State *CurrentState,  struct State *NextState, int z,  int chain
                 else NextState[z].v = CurrentState[z].v-dt*(INa+Ito+ICaL+ICaNa+ICaK+IKr+IKs+IKur+IK1+INaCa+INaK+INab+IKb+IpCa+ICab+I_gap_junc);
             #endif
 	    #else   
-			
-			/* both for step and basis
-			if ((t>(start+n*CL) && t<(start+duration1+n*CL-dt))) NextState[z].v = vbasis;
+			/*
+			 //both for step and basis
+			if ((t>(start+n*CL) && t<(start+duration1+n*CL-dt))) NextState[z].v = basis;
 			else if ((t>(start+duration1+n*CL) && t<(start+duration1+duration+n*CL-dt))) NextState[z].v = step;
 			else if (t>(start+duration1+duration+n*CL-dt)) NextState[z].v = v2; 
 						
 				//n =n+1;
 				//printf("n %d", n);
-			*/
-            
+			
+            */
             
             //COMMENT both for step and basis TIll "FINISH"
             #if IKATP
                 NextState[z].v = CurrentState[z].v-dt*(INa+Ito+ICaL+ICaNa+ICaK+IKr+IKs+IKur+IK1+INaCa+INaK+INab+IKb+IpCa+ICab+IKatp+Ist);
             #else
-                NextState[z].v = CurrentState[z].v-dt*(INa+Ito+ICaL+ICaNa+ICaK+IKr+IKs+IKur+IK1+INaCa+INaK+INab+IKb+IpCa+ICab+Ist);
+				NextState[z].v = CurrentState[z].v-dt*(INa+Ito+ICaL+ICaNa+ICaK+IKr+IKs+IKur+IK1+INaCa+INaK+INab+IKb+IpCa+ICab+Ist);
             #endif
             //"FINISH"
            
@@ -1216,6 +1234,9 @@ void RGC(struct State *CurrentState,  struct State *NextState, int z,  int chain
             
 	    double btp=1.25*bt;
 	    double a_relp=0.5*btp;
+	    a_relp *=c_m_arel;
+	    a_relp *=c_arel; //change
+	    
              if (iso==1)
 	    {
 		 a_relp*=1.75*c_a_rel;//1.75;
@@ -1582,16 +1603,18 @@ int main() //     COMMENT both for step and basis
     float dv=0;
     float t_output=0;
     
-    /*             //both for step and basis
+     /*       //both for step and basis
     if (argc != 2) {
 	fprintf(stderr, "Please, input 2 arguments!\n");
 	return 1;
     }
     //sscanf(argv[1], "%d", &v1);
     //sscanf(argv[1], "%d", &basis); // for basis
-    sscanf(argv[1], "%d", &step); // for step
-    */
-
+    //sscanf(argv[1], "%d", &step); // for step
+    sscanf(argv[1], "%d", &CL);
+	ft =   np * CL;
+	*/
+	
     //struct State CurrentState;
     
     //memory allocation for the chain:
